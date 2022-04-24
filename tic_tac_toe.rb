@@ -74,8 +74,6 @@ class Board
       back_slash.push(@board[i][i])
       forward_slash.push(@board[i][-1-i])
     end
-    puts "Basic Diagonals"
-    p [back_slash,forward_slash]
     [back_slash,forward_slash]
   end
 
