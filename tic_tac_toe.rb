@@ -22,6 +22,10 @@ class Board
     @width = width
     @height = height
     @board = create(width,height)
+    @rows = @board
+    @columns = @board.transpose
+    @diagonals = get_basic_diagonals
+    @all_diagonals = get_every_diagonal
   end
 
   private
@@ -34,6 +38,24 @@ class Board
     end
     board.reverse
   end
+
+  #Skipping difficult looping to get all diagonals for now
+  def get_every_diagonals
+    diagonals = []
+    corners = [@board[0][0],@board[0][-1],@board[-1][0],@board[-1][-1]]
+    diagonals.push(corners)
+  end
+
+  def get_basic_diagonals
+    back_slah = []
+    forward_slash = []
+    for i in 0...@height
+      back_slah.push(@board[i][i])
+      forward_slash.push(@board[i][-1-i])
+    end
+    [back_slah,forward_slash]
+  end
+
 
   public
   def update(square,token)
