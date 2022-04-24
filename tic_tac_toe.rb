@@ -1,11 +1,57 @@
 require 'set'
 
 class TicTacToe
-  #Is this unnecessary?
-  attr_reader :player1, :player2
-  def initialize(player1, player2)
-    @player1 = player1
-    @player2 = player2
+  attr_reader :players, :tokens
+  def initialize
+    @tokens = []
+    @players = []
+    add_players
+    @session = Session.new(self)
+  end
+  private
+  def add_players
+    puts "-- Player Registration --"
+    print "How many players? "
+    player_count = gets.strip.to_i
+    for i in 1..player_count
+      @players.append(register_player(i))
+    end
+  end
+
+  def register_player(number)
+    print "Name of Player#{number}: "
+    name = gets.strip
+    print "Player#{number}'s Marking Token: "
+    token = gets.strip
+    @tokens.push(token)
+    Player.new(name,token)
+  end
+
+  def yes?(answer)
+    answer == "y"
+  end
+
+  public
+  def log_win_loss(winner)
+    losers = @players.reject{|x| x == winner}
+    winner.record[:won] += 1
+    for loser in losers
+      loser.record[:lost] += 1
+    end
+  end
+
+  def log_draw
+    for player in @players
+      player.record[:draw] += 1
+    end
+  end
+
+  def game_over
+    print "Rematch with same players? (y/n) "
+    answer = gets.strip.downcase
+    if yes?(answer)
+      @session = Session.new(self)
+    end
   end
 end
 
@@ -104,26 +150,28 @@ class Board
 end
 
 class Session < TicTacToe
-  def initialize(board_width=3,board_height=3)
-    @tokens = []
-    super register_player("Player1"), register_player("Player2")
-    @players = [self.player1,self.player2].cycle
-    @board = Board.new(board_width,board_height)
+  def initialize(game)
+    @game = game
+    @cycle_players = game.players.cycle
+    setup_board
     player_turn(next_player)
   end 
 
   private
-  def register_player(player)
-    print "Name of #{player}: "
-    name = gets.strip
-    print "#{player}'s Marking Token: "
-    token = gets.strip
-    @tokens.push(token)
-    Player.new(name,token)
+
+  def setup_board
+    puts "--Game Board Setup--"
+    print "How many columns on the game board? "
+    columns = gets.strip.to_i
+    print "How many rows on the game board? "
+    rows = gets.strip.to_i
+    print "How many in a row to win? "
+    @match = gets.strip.to_i
+    @board = Board.new(columns,rows)
   end
-  
+
   def next_player
-    @current_player = @players.next
+    @current_player = @cycle_players.next
     @current_player
   end
 
@@ -133,7 +181,7 @@ class Session < TicTacToe
     square = gets.strip
     @board.update(square,player.token)
     if game_over?()
-      play_again?
+      @game.game_over
     else
       player_turn(next_player)
     end
@@ -143,20 +191,21 @@ class Session < TicTacToe
     if winner?
       @board.display
       puts "#{@current_player.name} won!"
-      @current_player.record[:won] += 1
+      @game.log_win_loss(@current_player)
       true
     elsif draw?
       @board.display
       puts "It was a draw."
+      @game.log_draw
       true
     else
       false
     end
   end
 
-  def winner?(match=3)
+  def winner?
     for path in @board.paths
-      if path.count(@current_player.token) == match
+      if path.count(@current_player.token) == @match
         return true
       end
     end
@@ -165,7 +214,7 @@ class Session < TicTacToe
 
   def draw?()
     board = @board.paths.flatten.to_set
-    for token in @tokens
+    for token in @game.tokens
       board.map! {|x| x == token ? "" : x}
     end
     board.all?("")
@@ -179,7 +228,7 @@ end
 ### Troubleshooting and testing below
 
 ### Test start_game
-test_game = Session.new()
+test_game = TicTacToe.new()
 
 
 #=>
