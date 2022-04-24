@@ -1,3 +1,4 @@
+require 'set'
 class TicTacToe
   #Is this unnecessary?
   attr_reader :player1, :player2
@@ -22,11 +23,6 @@ class Board
     @width = width
     @height = height
     @board = create(width,height)
-    @rows = @board
-    @columns = @board.transpose
-    @diagonals = get_all_diagonals
-    @diagonals_basic = get_basic_diagonals
-    @paths = [*@rows,*@columns,*@diagonals]
   end
 
   private
@@ -85,6 +81,11 @@ class Board
       index = row.index(square)
       row[index] = token if index
     end
+    @rows = @board
+    @columns = @board.transpose
+    @diagonals = get_all_diagonals
+    @diagonals_basic = get_basic_diagonals
+    @paths = [*@rows,*@columns,*@diagonals]
   end
 
   def display
@@ -167,10 +168,14 @@ class Session < TicTacToe
   end
 
   def draw?()
-    board = @board.paths.flatten
+    p @board.rows
+    p @board.columns
+    p @board.diagonals
+    board = @board.paths.flatten.to_set
     for token in @tokens
-      board.map {|x| x = "" if x == token}
+      board.map! {|x| x == token ? "" : x}
     end
+    p board
     board.all?("")
   end
 
