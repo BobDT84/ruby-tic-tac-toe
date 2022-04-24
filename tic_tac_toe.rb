@@ -22,12 +22,35 @@ class TicTacToe
 end
 
 class Player
-  def initialize(name,toekn)
+  def initialize(name,token)
     @name = name
     @token = token
+    @record = { won: 0, lost: 0, draw: 0}
   end
 end
 
+#class Session < TicTacToe
+def start_game
+  player1 = register_player("Player1")
+  player2 = register_player("Player2")
+  game = TicTacToe.new(player1,player2)
+end
+
+def register_player(player)
+  print "Name of #{player}: "
+  name = gets.strip
+  print "#{player}'s Marking Token: "
+  token = gets.strip
+  Player.new(name,token)
+end
+
+### Troubleshooting and testing below
+
+### Test start_game
+test_game = start_game
+p test_game
+
+### Test fill_board
 game = TicTacToe.new("a","b")
 board = game.fill_board([7,8,9,4,5,6,1,2,3])
 puts board
