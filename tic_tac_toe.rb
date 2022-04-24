@@ -1,4 +1,5 @@
 require 'set'
+
 class TicTacToe
   #Is this unnecessary?
   attr_reader :player1, :player2
@@ -13,7 +14,7 @@ class Player
   def initialize(name,token)
     @name = name
     @token = token
-    #@record = { won: 0, lost: 0, draw: 0}
+    @record = { won: 0, lost: 0, draw: 0}
   end
 end
 
@@ -107,8 +108,6 @@ class Session < TicTacToe
     @tokens = []
     super register_player("Player1"), register_player("Player2")
     @players = [self.player1,self.player2].cycle
-    #Can't figure out how to enter get prompts in debug console
-    #super Player.new("jack","x"), Player.new("jill","o")
     @board = Board.new(board_width,board_height)
     player_turn(next_player)
   end 
@@ -134,12 +133,8 @@ class Session < TicTacToe
     square = gets.strip
     @board.update(square,player.token)
     if game_over?()
-      #Do something
+      play_again?
     else
-      puts "winner"
-      p winner?
-      puts "draw"
-      p draw?
       player_turn(next_player)
     end
   end
@@ -148,6 +143,7 @@ class Session < TicTacToe
     if winner?
       @board.display
       puts "#{@current_player.name} won!"
+      @current_player.record[:won] += 1
       true
     elsif draw?
       @board.display
@@ -168,20 +164,15 @@ class Session < TicTacToe
   end
 
   def draw?()
-    p @board.rows
-    p @board.columns
-    p @board.diagonals
     board = @board.paths.flatten.to_set
     for token in @tokens
       board.map! {|x| x == token ? "" : x}
     end
-    p board
     board.all?("")
   end
 
-  public
-  def print_board
-    @board.display
+  def play_again?
+    
   end
 end
 
