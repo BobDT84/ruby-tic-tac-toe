@@ -40,10 +40,20 @@ class Board
   end
 
   #Skipping difficult looping to get all diagonals for now
-  def get_every_diagonals
+  def get_every_diagonal
     diagonals = []
-    corners = [@board[0][0],@board[0][-1],@board[-1][0],@board[-1][-1]]
-    diagonals.push(corners)
+    for i in 0...@height
+      back_slah = []
+      forward_slash = []
+      for j in 0...@width
+        back_slah.push(@board[i+j][j]) if (i+j) < @height
+        forward_slash.push(@board[i-j][j]) if (i-j) >= 0
+      end
+      diagonals.push(back_slah,forward_slash)
+    end
+    puts "All Diagonals"
+    p diagonals
+    diagonals
   end
 
   def get_basic_diagonals
@@ -53,6 +63,8 @@ class Board
       back_slah.push(@board[i][i])
       forward_slash.push(@board[i][-1-i])
     end
+    puts "Basic Diagonals"
+    p [back_slah,forward_slash]
     [back_slah,forward_slash]
   end
 
