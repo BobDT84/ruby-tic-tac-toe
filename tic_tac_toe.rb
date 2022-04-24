@@ -12,12 +12,12 @@ class Player
   def initialize(name,token)
     @name = name
     @token = token
-    @record = { won: 0, lost: 0, draw: 0}
+    #@record = { won: 0, lost: 0, draw: 0}
   end
 end
 
 class Board
-  attr_reader :width, :height, :board, :rows, :columns, :diagonals
+  attr_reader :width, :height, :board, :rows, :columns, :diagonals, :paths
   def initialize(width,height)
     @width = width
     @height = height
@@ -25,7 +25,8 @@ class Board
     @rows = @board
     @columns = @board.transpose
     @diagonals = get_all_diagonals
-    @diagonals_basic = get_basic_diagonals 
+    @diagonals_basic = get_basic_diagonals
+    @paths = [*@rows,*@columns,*@diagonals]
   end
 
   private
@@ -102,11 +103,13 @@ end
 
 class Session < TicTacToe
   def initialize(board_width=3,board_height=3)
+    @tokens = []
     super register_player("Player1"), register_player("Player2")
+    @players = [self.player1,self.player2].cycle
     #Can't figure out how to enter get prompts in debug console
     #super Player.new("jack","x"), Player.new("jill","o")
     @board = Board.new(board_width,board_height)
-    player_turn(self.player1)
+    player_turn(next_player)
   end 
 
   private
@@ -115,21 +118,60 @@ class Session < TicTacToe
     name = gets.strip
     print "#{player}'s Marking Token: "
     token = gets.strip
+    @tokens.push(token)
     Player.new(name,token)
+  end
+  
+  def next_player
+    @current_player = @players.next
+    @current_player
   end
 
   def player_turn(player)
-    self.print_board()
+    @board.display
     print "#{player.name} select a square: "
     square = gets.strip
     @board.update(square,player.token)
-    check_for_winner(player)
+    if game_over?()
+      #Do something
+    else
+      puts "winner"
+      p winner?
+      puts "draw"
+      p draw?
+      player_turn(next_player)
+    end
   end
 
-  def check_for_winner(player,match=3)
-    for row in @board.board
-      puts "#{player.name} won!" if row.all?(player.token)
+  def game_over?()
+    if winner?
+      @board.display
+      puts "#{@current_player.name} won!"
+      true
+    elsif draw?
+      @board.display
+      puts "It was a draw."
+      true
+    else
+      false
     end
+  end
+
+  def winner?(match=3)
+    for path in @board.paths
+      if path.count(@current_player.token) == match
+        return true
+      end
+    end
+    false
+  end
+
+  def draw?()
+    board = @board.paths.flatten
+    for token in @tokens
+      board.map {|x| x = "" if x == token}
+    end
+    board.all?("")
   end
 
   public
@@ -142,7 +184,7 @@ end
 
 ### Test start_game
 test_game = Session.new()
-puts test_game.print_board()
+
 
 #=>
 =begin
