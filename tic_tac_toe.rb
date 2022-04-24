@@ -17,7 +17,7 @@ class Player
 end
 
 class Board
-  attr_reader :width, :height, :board
+  attr_reader :width, :height, :board, :rows, :columns, :diagonals
   def initialize(width,height)
     @width = width
     @height = height
@@ -40,9 +40,8 @@ class Board
   end
 
   def get_all_diagonals
+    #How do I make this more readable?
     diagonals = []
-    backslashes = []
-    forwardslashes = []
     for i in 0...@height
       back_slash = []
       forward_slash = []
@@ -65,7 +64,6 @@ class Board
       end
       diagonals.push(back_slash,forward_slash)
     end
-    p diagonals
     diagonals
   end
 
