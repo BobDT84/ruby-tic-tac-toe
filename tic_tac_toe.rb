@@ -24,8 +24,8 @@ class Board
     @board = create(width,height)
     @rows = @board
     @columns = @board.transpose
-    @diagonals = get_basic_diagonals
-    @all_diagonals = get_every_diagonal
+    @diagonals = get_all_diagonals
+    @diagonals_basic = get_basic_diagonals 
   end
 
   private
@@ -39,33 +39,46 @@ class Board
     board.reverse
   end
 
-  #Skipping difficult looping to get all diagonals for now
-  def get_every_diagonal
+  def get_all_diagonals
     diagonals = []
+    backslashes = []
+    forwardslashes = []
     for i in 0...@height
-      back_slah = []
+      back_slash = []
       forward_slash = []
       for j in 0...@width
-        back_slah.push(@board[i+j][j]) if (i+j) < @height
+        back_slash.push(@board[i+j][j]) if (i+j) < @height
         forward_slash.push(@board[i-j][j]) if (i-j) >= 0
+        if i == @height-1 || i == 0
+          secondary_back_slash = []
+          secondary_forward_slash = []
+          for k in 0...@width
+            if i == 0 && j > 0
+              secondary_back_slash.push(@board[i+k][j+k]) if (i+k)<@height && (j+k)<@width
+            elsif i == @height-1 && j > 0
+              secondary_forward_slash.push(@board[i-k][j+k]) if (i-k) >= 0 && (j+k) < @width
+            end
+          end
+          diagonals.push(secondary_back_slash) unless secondary_back_slash.empty?
+          diagonals.push(secondary_forward_slash) unless secondary_forward_slash.empty?
+        end
       end
-      diagonals.push(back_slah,forward_slash)
+      diagonals.push(back_slash,forward_slash)
     end
-    puts "All Diagonals"
     p diagonals
     diagonals
   end
 
   def get_basic_diagonals
-    back_slah = []
+    back_slash = []
     forward_slash = []
     for i in 0...@height
-      back_slah.push(@board[i][i])
+      back_slash.push(@board[i][i])
       forward_slash.push(@board[i][-1-i])
     end
     puts "Basic Diagonals"
-    p [back_slah,forward_slash]
-    [back_slah,forward_slash]
+    p [back_slash,forward_slash]
+    [back_slash,forward_slash]
   end
 
 
