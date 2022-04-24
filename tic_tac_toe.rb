@@ -4,10 +4,10 @@ class TicTacToe
     @player2 = player2
   end
   def fill_board(array,width = 3)
+    #would it be better/easier to handle a nested array?
     board = []
     h_spacer = "\t---" + "|---"*(width-1) + "\n"
-    array.each_with_index do |value, index|
-      index += 1
+    array.each.with_index(1) do |value, index|
       case true
       when index%width == 1 
         board.push("\t #{value} ")
