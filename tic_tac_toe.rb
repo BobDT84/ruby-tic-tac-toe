@@ -4,20 +4,17 @@ class TicTacToe
     @player1 = player1
     @player2 = player2
   end
-  
-  def print_board(array,width = 3)
+
+  def print_board(array)
     #would it be better/easier to handle a nested array?
     board = []
-    h_spacer = "\t---" + "|---"*(width-1) + "\n"
-    array.each.with_index(1) do |value, index|
-      case true
-      when index%width == 1 
-        board.push("\t #{value} ")
-      when index%width == 0 && index < array.length
-        board.push("| #{value} \n" + h_spacer)
-      else
-        board.push("| #{value} ")
+    array.each_with_index do |sub_array, index|
+      width = sub_array.length
+      board.push "\t #{sub_array[0]} "
+      for i in 1...sub_array.length
+        board.push "| #{sub_array[i]} "
       end
+      board.push "\n\t---" + "|---"*(width-1) + "\n" unless index == array.length-1
     end
     puts board.join()
   end
@@ -34,9 +31,9 @@ class Player
 end
 
 class Session < TicTacToe
-  def initialize(board_size=[3,3])
+  def initialize(board_width=3,board_height=3)
     super register_player("Player1"), register_player("Player2")
-    @board_size = board_size
+    @board = new_board(board_width,board_height)
   end 
 
   private
@@ -47,20 +44,30 @@ class Session < TicTacToe
     token = gets.strip
     Player.new(name,token)
   end
+
+  def new_board(width,height)
+    board = []
+    for row in 1..height
+      board.push Array.new(width) {|index| (width*row)-index}.reverse
+      # row 1 index 0 width 3 => (3*1)-0 => 3 
+      # row 1 => [3,2,1].reverse => [1,2,3]
+    end
+    board.reverse
+  end
+
+  public
+  def print_board
+    super(@board)
+  end
 end
 
 ### Troubleshooting and testing below
 
 ### Test start_game
 test_game = Session.new()
-p test_game
 puts test_game.player1.name
 puts test_game.player1.token
-
-
-### Test fill_board
-game = TicTacToe.new("a","b")
-board = game.print_board([7,8,9,4,5,6,1,2,3])
+puts test_game.print_board()
 
 #=>
 =begin
