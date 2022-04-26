@@ -22,14 +22,8 @@ class TicTacToe
   end
 
   def register_player(number)
-    name_prompt = "Name of Player#{number}: "
-    print name_prompt
-    name = gets.strip
-    name = check_name(name, name_prompt)
-    token_prompt = "Player#{number}'s Marking Token: "
-    print token_prompt
-    token = gets.strip
-    token = check_token(token, token_prompt)
+    name = ask_and_check("Name of Player#{number}: ", :check_name)
+    token = ask_and_check("Player#{number}'s Marking Token: ", :check_token)
     @tokens.push(token)
     Player.new(name,token)
   end
@@ -54,12 +48,11 @@ class TicTacToe
   end
 
   def game_over
-    rematch_prompt = "Rematch with same players? (y/n) "
-    print rematch_prompt
-    answer = gets.strip.downcase
-    answer = check_input(answer,rematch_prompt,['y','n'])
+    answer = ask_and_check(
+      "Rematch with same players? (y/n) ", 
+      :check_input, 
+      [%w[y n], :call_downcase])
     if yes?(answer)
-      p answer
       @session = Session.new(self)
     end
   end
@@ -136,6 +129,8 @@ class Board
   end
 
   def format_square_value(square)
+    # if the board includes double digts
+    # add a space before single digit values
     if large_board?(@width, @height) && square.to_i < 10
       square.prepend(' ')
     else
@@ -157,7 +152,6 @@ class Board
   end
 
   def open_squares(tokens)
-    p tokens
     squares = @board.clone.flatten
     for token in tokens
       squares.delete(token)
@@ -167,17 +161,21 @@ class Board
 
   def display
     board = []
-    @board.each_with_index do |sub_array, index|
-      width = sub_array.length
-      square = format_square_value(sub_array[0])
-      spacer = large_board?(@width,@height) ? "----" : "---"
-      board.push "\t #{square} "
-      for i in 1...sub_array.length
-        square = format_square_value(sub_array[i])
-        board.push "| #{square} "
+    spacer = large_board?(@width,@height) ? '----' : '---' 
+    # extra spacer to account for squares with double digit numbers
+    @board.each_with_index do |inner_array, index|
+      square = format_square_value(inner_array[0])
+      board.push "\t #{square} " # first column value
+
+      width = inner_array.length
+      for i in 1...inner_array.length
+        square = format_square_value(inner_array[i])
+        board.push "| #{square} " # values in row index after first column value
       end
-      board.push "\n\t#{spacer}" + "|#{spacer}"*(width-1) + "\n" unless index == width-1
+      board.push("\n\t#{spacer}" + "|#{spacer}"*(width-1) + "\n") unless index == width - 1
+      #row spacer ---|---|---
     end
+
     puts board.join()
   end
 end
@@ -189,24 +187,28 @@ class Session < TicTacToe
     @cycle_players = game.players.cycle
     setup_board
     player_turn(next_player)
-  end 
+  end
 
   private
 
   def setup_board
     puts "--Game Board Setup--"
-    columns_prompt = "How many columns on the game board? (3-9)"
-    print columns_prompt
-    columns = gets.strip.to_i
-    columns = check_number(columns, columns_prompt, 9, 3)
-    rows_prompt = "How many rows on the game board? (3-9)"
-    print rows_prompt
-    rows = gets.strip.to_i
-    rows = check_number(rows, rows_prompt, 9, 3)
-    match_prompt = "How many in a row to win? "
-    print match_prompt
-    @match = gets.strip.to_i
-    @match = check_number(@match, match_prompt, [columns, rows].max, 3)
+    columns = ask_and_check(
+      "How many columns on the game board? (3-9)", 
+      :check_number, 
+      [9, 3]).to_i
+
+    rows = ask_and_check(
+      "How many rows on the game board? (3-9)", 
+      :check_number, 
+      [9, 3]).to_i
+
+    max = [columns, rows].max
+    @match = ask_and_check(
+      "How many in a row to win? (3-#{max})", 
+      :check_number, 
+      [max, 3]).to_i
+
     @board = Board.new(columns,rows)
   end
 
@@ -217,10 +219,11 @@ class Session < TicTacToe
 
   def player_turn(player)
     @board.display
-    select_square_prompt = "#{player.name} select a square: "
-    print select_square_prompt
-    square = gets.strip
-    square = check_input(square, select_square_prompt, @board.open_squares(@game.tokens))
+    square = ask_and_check(
+      "#{player.name} select a square: ", 
+      :check_input, 
+      [@board.open_squares(@game.tokens)])
+
     @board.update(square,player.token)
     if game_over?()
       @game.game_over

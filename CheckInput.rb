@@ -3,10 +3,10 @@ module CheckInput
     case false
     when length?(token, 1)
       puts 'Token must be only one character'
-      repeat_check(prompt, :check_token)
+      ask_and_check(prompt, :check_token)
     when not_number?(token)
       puts 'Token can not be a number'
-      repeat_check(prompt, :check_token)
+      return ask_and_check(prompt, :check_token)
     end
     token
   end
@@ -16,7 +16,7 @@ module CheckInput
       name
     else
       "Name must be between 1 and #{max_length} characters"
-      repeat_check(prompt, :check_name,[max_length])
+      return ask_and_check(prompt, :check_name, [max_length])
     end
   end
 
@@ -24,20 +24,23 @@ module CheckInput
     case false
     when number?(number)
       puts 'You must enter a valid number'
-      repeat_check(prompt, :check_number, [max, min])
+      return ask_and_check(prompt, :check_number, [max, min])
     when between?(number, max, min)
       puts "The number must be between #{min} and #{max}"
-      repeat_check(prompt, :check_number, [max, min])
+      return ask_and_check(prompt, :check_number, [max, min])
     end
     number
   end
 
-  def check_input(input, prompt, expects)
-    if expects.any?(input)
+  def check_input(input, prompt, expects, modify = false)
+    if modify
+      input = method(modify).call(input)
+    end
+    if expects.include?(input)
       input
     else
       puts 'Incorrect Input'
-      repeat_check(prompt, :check_input, [expects])
+      return ask_and_check(prompt, :check_input, [expects, modify])
     end
     input
   end
@@ -51,6 +54,10 @@ module CheckInput
     subject <= max && subject >= min
   end
 
+  def call_downcase(subject)
+    subject.downcase
+  end
+
   def number?(subject)
     subject =~ /[0-9]/
   end
@@ -59,7 +66,7 @@ module CheckInput
     !number?(subject)
   end
 
-  def repeat_check(prompt, check, arguments = false)
+  def ask_and_check(prompt, check, arguments = false)
     print prompt
     input = gets.strip
     if arguments
