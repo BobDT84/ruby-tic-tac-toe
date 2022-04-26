@@ -4,16 +4,19 @@ require_relative 'CheckInput'
 class TicTacToe
   include CheckInput
   attr_reader :players, :tokens
+
   def initialize
     @tokens = []
     @players = []
     add_players
     @session = Session.new(self)
   end
+
   private
+
   def add_players
-    puts "-- Player Registration --"
-    print "How many players? (2-6)"
+    puts '-- Player Registration --'
+    print 'How many players? (2-6)'
     player_count = gets.strip.to_i
     player_count = check_number(player_count, 6, 2)
     for i in 1..player_count
@@ -25,16 +28,17 @@ class TicTacToe
     name = ask_and_check("Name of Player#{number}: ", :check_name)
     token = ask_and_check("Player#{number}'s Marking Token: ", :check_token)
     @tokens.push(token)
-    Player.new(name,token)
+    Player.new(name, token)
   end
 
   def yes?(answer)
-    answer == "y"
+    answer == 'y'
   end
 
   public
+
   def log_win_loss(winner)
-    losers = @players.reject{|x| x == winner}
+    losers = @players.reject { |x| x == winner }
     winner.record[:won] += 1
     for loser in losers
       loser.record[:lost] += 1
@@ -49,71 +53,73 @@ class TicTacToe
 
   def game_over
     answer = ask_and_check(
-      "Rematch with same players? (y/n) ", 
-      :check_input, 
-      [%w[y n], :call_downcase])
-    if yes?(answer)
-      @session = Session.new(self)
-    end
+      'Rematch with same players? (y/n) ',
+      :check_input,
+      [%w[y n], :call_downcase]
+    )
+    @session = Session.new(self) if yes?(answer)
   end
 end
 
 class Player
   attr_reader :name, :token, :record
-  def initialize(name,token)
+
+  def initialize(name, token)
     @name = name
     @token = token
-    @record = { won: 0, lost: 0, draw: 0}
+    @record = { won: 0, lost: 0, draw: 0 }
   end
 end
 
 class Board
   attr_reader :width, :height, :board, :rows, :columns, :diagonals, :paths
-  def initialize(width,height)
+
+  def initialize(width, height)
     @width = width
     @height = height
-    @board = create(width,height)
+    @board = create(width, height)
   end
 
   private
-  def create(width,height)
+
+  def create(width, height)
     board = []
     for row in 1..height
-      board.push Array.new(width) {|index| ((width*row)-index).to_s}.reverse
-      # row 1 index 0 width 3 => (3*1)-0 => 3 
+      board.push Array.new(width) { |index| ((width * row) - index).to_s }.reverse
+      # row 1 index 0 width 3 => (3*1)-0 => 3
       # row 1 => [3,2,1].reverse => [1,2,3]
     end
     board.reverse
   end
 
   def large_board?(width, height)
-    width*height >= 10
+    width * height >= 10
   end
 
   def get_all_diagonals
-    #How do I make this more readable?
+    # How do I make this more readable?
     diagonals = []
     for i in 0...@height
       back_slash = []
       forward_slash = []
       for j in 0...@width
-        back_slash.push(@board[i+j][j]) if (i+j) < @height
-        forward_slash.push(@board[i-j][j]) if (i-j) >= 0
-        if i == @height-1 || i == 0
-          secondary_back_slash = []
-          secondary_forward_slash = []
-          for k in 0...@width
-            if i == 0 && j > 0
-              secondary_back_slash.push(@board[i+k][j+k]) if (i+k)<@height && (j+k)<@width
-            elsif i == @height-1 && j > 0
-              secondary_forward_slash.push(@board[i-k][j+k]) if (i-k) >= 0 && (j+k) < @width
-            end
+        back_slash.push(@board[i + j][j]) if (i + j) < @height
+        forward_slash.push(@board[i - j][j]) if (i - j) >= 0
+        next unless i == @height - 1 || i == 0
+
+        secondary_back_slash = []
+        secondary_forward_slash = []
+        for k in 0...@width
+          if i == 0 && j > 0
+            secondary_back_slash.push(@board[i + k][j + k]) if (i + k) < @height && (j + k) < @width
+          elsif i == @height - 1 && j > 0
+            secondary_forward_slash.push(@board[i - k][j + k]) if (i - k) >= 0 && (j + k) < @width
           end
-          diagonals.push(secondary_back_slash) unless secondary_back_slash.empty?
-          diagonals.push(secondary_forward_slash) unless secondary_forward_slash.empty?
         end
+        diagonals.push(secondary_back_slash) unless secondary_back_slash.empty?
+        diagonals.push(secondary_forward_slash) unless secondary_forward_slash.empty?
       end
-      diagonals.push(back_slash,forward_slash)
+      diagonals.push(back_slash, forward_slash)
     end
     diagonals
   end
@@ -123,9 +129,9 @@ class Board
     forward_slash = []
     for i in 0...@height
       back_slash.push(@board[i][i])
-      forward_slash.push(@board[i][-1-i])
+      forward_slash.push(@board[i][-1 - i])
     end
-    [back_slash,forward_slash]
+    [back_slash, forward_slash]
   end
 
   def format_square_value(square)
@@ -139,7 +145,8 @@ class Board
   end
 
   public
-  def update(square,token)
+
+  def update(square, token)
     for row in @board
       index = row.index(square)
       row[index] = token if index
@@ -148,7 +155,7 @@ class Board
     @columns = @board.transpose
     @diagonals = get_all_diagonals
     @diagonals_basic = get_basic_diagonals
-    @paths = [*@rows,*@columns,*@diagonals]
+    @paths = [*@rows, *@columns, *@diagonals]
   end
 
   def open_squares(tokens)
@@ -161,7 +168,7 @@ class Board
 
   def display
     board = []
-    spacer = large_board?(@width,@height) ? '----' : '---' 
+    spacer = large_board?(@width, @height) ? '----' : '---'
     # extra spacer to account for squares with double digit numbers
     @board.each_with_index do |inner_array, index|
       square = format_square_value(inner_array[0])
@@ -172,15 +179,15 @@ class Board
         square = format_square_value(inner_array[i])
         board.push "| #{square} " # values in row index after first column value
       end
-      board.push("\n\t#{spacer}" + "|#{spacer}"*(width-1) + "\n") unless index == width - 1
-      #row spacer ---|---|---
+      board.push("\n\t#{spacer}" + "|#{spacer}" * (width - 1) + "\n") unless index == width - 1
+      # row spacer ---|---|---
     end
 
-    puts board.join()
+    puts board.join
   end
 end
 
-class Session
+class Session < TicTacToe
   include CheckInput
   def initialize(game)
     @game = game
@@ -192,24 +199,27 @@ class Session
   private
 
   def setup_board
-    puts "--Game Board Setup--"
+    puts '--Game Board Setup--'
     columns = ask_and_check(
-      "How many columns on the game board? (3-9)", 
-      :check_number, 
-      [9, 3]).to_i
+      'How many columns on the game board? (3-9)',
+      :check_number,
+      [9, 3]
+    ).to_i
 
     rows = ask_and_check(
-      "How many rows on the game board? (3-9)", 
-      :check_number, 
-      [9, 3]).to_i
+      'How many rows on the game board? (3-9)',
+      :check_number,
+      [9, 3]
+    ).to_i
 
     max = [columns, rows].max
     @match = ask_and_check(
-      "How many in a row to win? (3-#{max})", 
-      :check_number, 
-      [max, 3]).to_i
+      "How many in a row to win? (3-#{max})",
+      :check_number,
+      [max, 3]
+    ).to_i
 
-    @board = Board.new(columns,rows)
+    @board = Board.new(columns, rows)
   end
 
   def next_player
@@ -220,19 +230,20 @@ class Session
   def player_turn(player)
     @board.display
     square = ask_and_check(
-      "#{player.name} select a square: ", 
-      :check_input, 
-      [@board.open_squares(@game.tokens)])
+      "#{player.name} select a square: ",
+      :check_input,
+      [@board.open_squares(@game.tokens)]
+    )
 
-    @board.update(square,player.token)
-    if game_over?()
+    @board.update(square, player.token)
+    if game_over?
       @game.game_over
     else
       player_turn(next_player)
     end
   end
 
-  def game_over?()
+  def game_over?
     if winner?
       @board.display
       puts "#{@current_player.name} won!"
@@ -240,7 +251,7 @@ class Session
       true
     elsif draw?
       @board.display
-      puts "It was a draw."
+      puts 'It was a draw.'
       @game.log_draw
       true
     else
@@ -250,33 +261,26 @@ class Session
 
   def winner?
     for path in @board.paths
-      if path.count(@current_player.token) == @match
-        return true
-      end
+      return true if path.count(@current_player.token) == @match
     end
     false
   end
 
-  def draw?()
+  def draw?
     @board.open_squares(@game.tokens).empty?
   end
 
-  def play_again?
-    
-  end
+  def play_again?; end
 end
 
 ### Troubleshooting and testing below
 
 ### Test start_game
-test_game = TicTacToe.new()
-
+test_game = TicTacToe.new
 
 #=>
-=begin
- 7 | 8 | 9 
----|---|---
- 4 | 5 | 6 
----|---|---
- 1 | 2 | 3 
-=end
+#  7 | 8 | 9
+# ---|---|---
+#  4 | 5 | 6
+# ---|---|---
+#  1 | 2 | 3
