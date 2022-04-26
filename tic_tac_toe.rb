@@ -255,8 +255,10 @@ class Session
 
   def winner?
     for path in @board.paths
-      if path.count(@current_player.token) == @match
-        return true
+      for i in 0..path.length-@match
+        if path.slice(i,@match).all?(@current_player.token)
+          return true
+        end
       end
     end
     false
