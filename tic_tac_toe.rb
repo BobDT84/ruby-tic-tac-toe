@@ -59,6 +59,7 @@ class TicTacToe
     answer = gets.strip.downcase
     answer = check_input(answer,rematch_prompt,['y','n'])
     if yes?(answer)
+      p answer
       @session = Session.new(self)
     end
   end
@@ -90,6 +91,10 @@ class Board
       # row 1 => [3,2,1].reverse => [1,2,3]
     end
     board.reverse
+  end
+
+  def large_board?(width, height)
+    width*height >= 10
   end
 
   def get_all_diagonals
@@ -130,6 +135,13 @@ class Board
     [back_slash,forward_slash]
   end
 
+  def format_square_value(square)
+    if large_board?(@width, @height) && square.to_i < 10
+      square.prepend(' ')
+    else
+      square
+    end
+  end
 
   public
   def update(square,token)
@@ -157,11 +169,14 @@ class Board
     board = []
     @board.each_with_index do |sub_array, index|
       width = sub_array.length
-      board.push "\t #{sub_array[0]} "
+      square = format_square_value(sub_array[0])
+      spacer = large_board?(@width,@height) ? "----" : "---"
+      board.push "\t #{square} "
       for i in 1...sub_array.length
-        board.push "| #{sub_array[i]} "
+        square = format_square_value(sub_array[i])
+        board.push "| #{square} "
       end
-      board.push "\n\t---" + "|---"*(width-1) + "\n" unless index == width-1
+      board.push "\n\t#{spacer}" + "|#{spacer}"*(width-1) + "\n" unless index == width-1
     end
     puts board.join()
   end
@@ -180,18 +195,18 @@ class Session < TicTacToe
 
   def setup_board
     puts "--Game Board Setup--"
-    columns_prompt = "How many columns on the game board? (3-24)"
+    columns_prompt = "How many columns on the game board? (3-9)"
     print columns_prompt
     columns = gets.strip.to_i
-    columns = check_number(columns, columns_prompt, 24, 3)
-    rows_prompt = "How many rows on the game board? (3-24)"
+    columns = check_number(columns, columns_prompt, 9, 3)
+    rows_prompt = "How many rows on the game board? (3-9)"
     print rows_prompt
     rows = gets.strip.to_i
-    rows = check_number(rows, rows_prompt, 24, 3)
+    rows = check_number(rows, rows_prompt, 9, 3)
     match_prompt = "How many in a row to win? "
     print match_prompt
     @match = gets.strip.to_i
-    @match = check_number(@match, match_prompt, [columns, rows].max, [columns, rows].min)
+    @match = check_number(@match, match_prompt, [columns, rows].max, 3)
     @board = Board.new(columns,rows)
   end
 
@@ -240,11 +255,7 @@ class Session < TicTacToe
   end
 
   def draw?()
-    board = @board.paths.flatten.to_set
-    for token in @game.tokens
-      board.map! {|x| x == token ? "" : x}
-    end
-    board.all?("")
+    @board.open_squares(@game.tokens).empty?
   end
 
   def play_again?
