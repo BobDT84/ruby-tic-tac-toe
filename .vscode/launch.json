@@ -7,8 +7,11 @@
         {
             "name": "Debug Local File",
             "type": "Ruby",
-            "request": "launch",
+            "request": "attach",
             "program": "${workspaceRoot}/tic_tac_toe.rb",
+            "remoteHost": "127.0.0.1",
+            "remotePort": "1234",
+            "remoteWorkspaceRoot": "${workspaceRoot}",
             "cwd": "${workspaceRoot}",
             "env": {
                 "PATH": "/home/bob/.rbenv/shims:/home/bob/.rbenv/bin:/home/bob/.nvm/versions/node/v16.14.0/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",

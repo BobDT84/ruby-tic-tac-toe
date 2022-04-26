@@ -1,6 +1,8 @@
 require 'set'
+require_relative 'CheckInput'
 
 class TicTacToe
+  include CheckInput
   attr_reader :players, :tokens
   def initialize
     @tokens = []
@@ -11,18 +13,23 @@ class TicTacToe
   private
   def add_players
     puts "-- Player Registration --"
-    print "How many players? "
+    print "How many players? (2-6)"
     player_count = gets.strip.to_i
+    player_count = check_number(player_count, 6, 2)
     for i in 1..player_count
       @players.append(register_player(i))
     end
   end
 
   def register_player(number)
-    print "Name of Player#{number}: "
+    name_prompt = "Name of Player#{number}: "
+    print name_prompt
     name = gets.strip
-    print "Player#{number}'s Marking Token: "
+    name = check_name(name, name_prompt)
+    token_prompt = "Player#{number}'s Marking Token: "
+    print token_prompt
     token = gets.strip
+    token = check_token(token, token_prompt)
     @tokens.push(token)
     Player.new(name,token)
   end
@@ -47,8 +54,10 @@ class TicTacToe
   end
 
   def game_over
-    print "Rematch with same players? (y/n) "
+    rematch_prompt = "Rematch with same players? (y/n) "
+    print rematch_prompt
     answer = gets.strip.downcase
+    answer = check_input(answer,rematch_prompt,['y','n'])
     if yes?(answer)
       @session = Session.new(self)
     end
@@ -135,6 +144,15 @@ class Board
     @paths = [*@rows,*@columns,*@diagonals]
   end
 
+  def open_squares(tokens)
+    p tokens
+    squares = @board.clone.flatten
+    for token in tokens
+      squares.delete(token)
+    end
+    squares
+  end
+
   def display
     board = []
     @board.each_with_index do |sub_array, index|
@@ -150,6 +168,7 @@ class Board
 end
 
 class Session < TicTacToe
+  include CheckInput
   def initialize(game)
     @game = game
     @cycle_players = game.players.cycle
@@ -161,12 +180,18 @@ class Session < TicTacToe
 
   def setup_board
     puts "--Game Board Setup--"
-    print "How many columns on the game board? "
+    columns_prompt = "How many columns on the game board? (3-24)"
+    print columns_prompt
     columns = gets.strip.to_i
-    print "How many rows on the game board? "
+    columns = check_number(columns, columns_prompt, 24, 3)
+    rows_prompt = "How many rows on the game board? (3-24)"
+    print rows_prompt
     rows = gets.strip.to_i
-    print "How many in a row to win? "
+    rows = check_number(rows, rows_prompt, 24, 3)
+    match_prompt = "How many in a row to win? "
+    print match_prompt
     @match = gets.strip.to_i
+    @match = check_number(@match, match_prompt, [columns, rows].max, [columns, rows].min)
     @board = Board.new(columns,rows)
   end
 
@@ -177,8 +202,10 @@ class Session < TicTacToe
 
   def player_turn(player)
     @board.display
-    print "#{player.name} select a square: "
+    select_square_prompt = "#{player.name} select a square: "
+    print select_square_prompt
     square = gets.strip
+    square = check_input(square, select_square_prompt, @board.open_squares(@game.tokens))
     @board.update(square,player.token)
     if game_over?()
       @game.game_over
