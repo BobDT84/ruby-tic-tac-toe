@@ -131,14 +131,18 @@ class Board
   def format_square_value(square)
     # if the board includes double digts
     # add a space before single digit values
-    if large_board?(@width, @height) && square.to_i < 10
-      square.prepend(' ')
+    if large_board?(@width, @height) && (square.to_i < 10 || @tokens.include?(square))
+      ' ' + square
     else
       square
     end
   end
 
   public
+  def log_tokens(tokens)
+    @tokens = tokens
+  end
+
   def update(square,token)
     for row in @board
       index = row.index(square)
@@ -160,23 +164,23 @@ class Board
   end
 
   def display
-    board = []
+    display_board = []
     spacer = large_board?(@width,@height) ? '----' : '---' 
     # extra spacer to account for squares with double digit numbers
     @board.each_with_index do |inner_array, index|
       square = format_square_value(inner_array[0])
-      board.push "\t #{square} " # first column value
+      display_board.push "\t #{square} " # first column value
 
       width = inner_array.length
       for i in 1...inner_array.length
         square = format_square_value(inner_array[i])
-        board.push "| #{square} " # values in row index after first column value
+        display_board.push "| #{square} " # values in row index after first column value
       end
-      board.push("\n\t#{spacer}" + "|#{spacer}"*(width-1) + "\n") unless index == width - 1
+      display_board.push("\n\t#{spacer}" + "|#{spacer}"*(width-1) + "\n") unless index == width - 1
       #row spacer ---|---|---
     end
 
-    puts board.join()
+    puts display_board.join()
   end
 end
 
@@ -210,6 +214,7 @@ class Session
       [max, 3]).to_i
 
     @board = Board.new(columns,rows)
+    @board.log_tokens(@game.tokens)
   end
 
   def next_player
